@@ -1,3 +1,5 @@
+include $(TOP_DIR)/include.mk
+
 TARGET        := $(BUILD_DIR)/yeself.k
 SOURCES       := boot.s com.s kernel.cpp
 LINKER_SCRIPT := link.ld
@@ -39,9 +41,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(LD) $(LDFLAGS) $^ -o $@
-	grub-file --is-x86-multiboot2 $@ \
-		&&  echo "$@ is multiboot2 compliant" \
-		|| (echo "$@ is not multiboot2 compliant" ; exit 1)
+	$(call check_multiboot2,$@)
 
 $(BUILD_DIR)/%.o: %.s
 	$(NASM) $(NASMFLAGS) $< -o $@
