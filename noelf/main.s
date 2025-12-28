@@ -4,11 +4,9 @@ bits 32
 %define VIDEO_MEM 0xB8000
 
 ; Format of char style:
-; 0bABBBCCCD
-; where A       - whether char is blinking,
-;       B and C - background and foreground colors in 3-bit RGB format,
-;       D       - whether char is light
-%define DEFAULT_CHAR_STYLE 0b00001110
+; 0b[Do Blink, BG Red, Green, Blue, Intensity, FG Red, Green, Blue]
+                           ; bRGBiRGB
+%define DEFAULT_CHAR_STYLE 0b00000111
 
 section .data
     stdout_char_n dd 0
@@ -35,7 +33,7 @@ start:
     mov bx, DEFAULT_CHAR_STYLE << 8 | ':'
     call putc
 
-    cmp ecx, 0xE85250D6
+    cmp ecx, 0x36D76289
     jne .error
 
     mov bl, ')'
@@ -45,6 +43,16 @@ start:
 
 .end:
     call putc
+
+    ; Print all the bytes of initial EAX (now ECX) onto the screen
+    mov edi, 4
+.rot_loop:
+    rol ecx, 8
+    mov bl, cl
+    call putc
+
+    dec edi
+    jnz .rot_loop
 
     ; Hang 
     jmp $
@@ -98,19 +106,19 @@ M_TAG
     ; entry address
     dd start
 
-M_TAG
-    ; type = framebuffer tag
-    dw 5
-    ; flags
-    dw 0
-    ; size
-    dd 20
-    ; width of screen
-    dd 80
-    ; height of screen
-    dd 25
-    ; bit depth, 0 means text mode
-    dd 0
+; M_TAG
+;     ; type = framebuffer tag
+;     dw 5
+;     ; flags
+;     dw 0
+;     ; size
+;     dd 20
+;     ; width of screen
+;     dd 80
+;     ; height of screen
+;     dd 25
+;     ; bit depth, 0 means text mode
+;     dd 0
 
 M_TAG
     ; type = end tag

@@ -2,14 +2,11 @@
     #define __cdecl __attribute__((cdecl))
 #endif
 
-extern "C"
-{
-    void __cdecl a_com_putc(char);
+extern "C" void __cdecl a_com_putc(char);
 
-    void __cdecl c_main(void)
-    {
-        a_com_putc('H');
-        a_com_putc('\n');
-        for(;;) {}
-    }
+extern "C" void __cdecl c_main()
+{
+    a_com_putc('H');
+    a_com_putc('\n');
+    for(;;) {}
 }

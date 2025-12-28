@@ -14,8 +14,8 @@ yeself:
 	mkdir -p $(BUILD_DIR)
 	$(MAKE) -C yeself
 
-qemu: iso
-	qemu-system-i386 -cdrom $(BUILD_DIR)/primus.iso $(F) $(FLAGS) $(EXTRA_FLAGS) $(QEMUFLAGS)
+qemu:
+	qemu-system-i386 -cdrom $(BUILD_DIR)/primus.iso -serial stdio $(F) $(FLAGS) $(EXTRA_FLAGS) $(QEMUFLAGS)
 
 clean:
 	rm -rf $(BUILD_DIR)
