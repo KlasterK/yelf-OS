@@ -1,25 +1,34 @@
 include $(TOP_DIR)/include.mk
 
 TARGET        := $(BUILD_DIR)/yeself.k
-SOURCES       := boot.s com.s kernel.cpp common.hpp comio.hpp comio.cpp
 LINKER_SCRIPT := link.ld
+
+SOURCES := boot.s kernel.cpp comio.cpp vgaio.cpp
 
 NASM      := nasm
 NASMFLAGS := -f elf32
 
 CXX      := clang++
-CXXFLAGS := -target i686-pc-none-elf \
-            -march=i486 \
-            -ffreestanding \
-            -fno-stack-protector \
-            -fno-exceptions \
-            -fno-rtti \
-            -m32 \
-            -std=c++23 \
-            -masm=intel
+CXXFLAGS := -target i686-pc-none-elf
+CXXFLAGS += -march=i486
+CXXFLAGS += -ffreestanding
+CXXFLAGS += -fno-stack-protector
+CXXFLAGS += -fno-exceptions
+CXXFLAGS += -fno-rtti
+CXXFLAGS += -m32
+CXXFLAGS += -std=c++23
+CXXFLAGS += -masm=intel
+CXXFLAGS += -Wall
+CXXFLAGS += -Wextra
 
-LD      := ld.lld
-LDFLAGS := -m elf_i386 -static -nostdlib -T $(LINKER_SCRIPT)
+LD      := clang++
+LDFLAGS := -m32
+LDFLAGS += -fuse-ld=lld
+LDFLAGS += -static
+LDFLAGS += -nostdlib
+LDFLAGS += -flto
+LDFLAGS += -Wl,-T,$(LINKER_SCRIPT)
+LDFLAGS += -Wl,-m,elf_i386
 
 DEBUG ?= 1
 ifeq ($(DEBUG), 1)
@@ -48,3 +57,5 @@ $(BUILD_DIR)/%.o: %.s
 
 $(BUILD_DIR)/%.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+-include $(OBJS:.o=.d)

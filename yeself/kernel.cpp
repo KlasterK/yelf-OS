@@ -1,15 +1,28 @@
 #include "common.hpp"
 #include "comio.hpp"
+#include "vgaio.hpp"
 
 extern "C" void __cdecl c_main()
 {
-    com_printf("Hello World!\n");
-    com_printf("Let's see what is at 0... 0x%X\n", *(volatile int *)0);
-    com_printf("Press any key to hang up . . . ");
-    char key = com_getc();
-    com_printf("\nYour key was %c. %s...\n", key, "Hanging up");
-    
     asm volatile ("cli");
+
+    VGA::Terminal tty;
+    tty.puts("Hello World!\n");
+    tty.puts("Please input text into COM port and it will be echoed here.\n");
+
+    char input_buf[256];
+    char *it;
+    for(;;)
+    {
+        com_readuntil('\r', input_buf, sizeof(input_buf) - 1);
+
+        for(it = input_buf; *it != 0; ++it);
+        *it = '\n';
+        *++it = 0;
+
+        tty.puts(input_buf);
+    }
+
     for(;;)
         asm volatile ("hlt");
 }

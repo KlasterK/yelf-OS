@@ -15,17 +15,10 @@ section .bss
 section .text
 global a_start
 a_start:
-    ; Already in protected mode
-    ; All the selectors are pointing to 0
-
-    ; Init the stack
     mov esp, stack_top
 
     extern c_main
     call c_main
-
-    ; Hang 
-    jmp $
 
 
 section .m align=8

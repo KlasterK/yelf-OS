@@ -20,6 +20,8 @@ qemu:
 clean:
 	rm -rf $(BUILD_DIR)
 
+rebuild: clean all
+
 iso:
 	mkdir -p $(BUILD_DIR)/iso/boot/grub
 	cp $(BUILD_DIR)/*.k $(BUILD_DIR)/iso/
