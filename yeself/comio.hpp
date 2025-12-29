@@ -1,15 +1,15 @@
 #ifndef YESELF_COMIO_HPP
 #define YESELF_COMIO_HPP
 
-#include <stdint.h>
-#include <stddef.h>
+#include "ifile.hpp"
 
-void com_putc(char c);
-void com_puts(const char *string);
-void com_printf(const char *fmt, ...);
-void com_write(const char *data, size_t n);
-
-char com_getc();
-bool com_readuntil(char target, char *buffer, size_t n);
+class COMPortFile : public IFile
+{
+public:
+    int read(void *buf, size_t n) override;
+    int write(const void *buf, size_t n) override;
+    inline int seek(int, SeekFrom) override { return -1; };
+    inline int close() override { return 0; };
+};
 
 #endif // YESELF_COMIO_HPP

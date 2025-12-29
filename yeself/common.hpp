@@ -1,6 +1,8 @@
 #ifndef YESELF_COMMON_HPP
 #define YESELF_COMMON_HPP
 
+#include "stddef.h"
+
 #ifndef __cdecl
     #define __cdecl __attribute__((cdecl))
 #endif
@@ -26,5 +28,12 @@ constexpr T max(T a, T b) { return (a > b) ? a : b; }
 
 template<typename T>
 constexpr T clamp(T x, T lower, T upper) { return max(lower, min(upper, x)); }
+
+constexpr size_t strlen(const char* s) 
+{
+    size_t i{};
+    while(s[i] != 0) ++i;
+    return i;
+}
 
 #endif // YESELF_COMMON_HPP

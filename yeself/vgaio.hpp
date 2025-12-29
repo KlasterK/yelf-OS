@@ -2,6 +2,7 @@
 #define YESELF_VGAIO_HPP
 
 #include "common.hpp"
+#include "ifile.hpp"
 #include <stdint.h>
 #include <stddef.h>
 
@@ -46,25 +47,17 @@ union Char
 } __packed;
 static_assert(sizeof(Char) == 2);
 
-class Terminal
+class TerminalFile : public IFile
 {
 public:
-    static constexpr unsigned Width = 80, Height = 25;
-
-    void putc(char c);
-    void puts(const char *string);
-    void write(const char *data, size_t n);
-    void printf(const char *fmt, ...);
-
-    void seek(unsigned x, unsigned y);
-    Pair<unsigned> tell();
-
-    inline CharStyle get_style() { return m_style; }
-    inline void set_style(CharStyle style) { m_style = style; }
+    inline int read(void *, size_t) override { return -1; };
+    int write(const void *buf, size_t n) override;
+    int seek(int offset, SeekFrom whence) override;
+    inline int close() override { return 0; };
 
 private:
+    static constexpr unsigned Width = 80, Height = 25;
     static inline volatile Char *VideoMemory() { return (volatile Char *)0xB8000; }
-
     static Pair<volatile Char *> get_page_begin_end(int page_number);
 
     CharStyle m_style;
