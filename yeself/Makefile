@@ -1,7 +1,7 @@
 include $(TOP_DIR)/include.mk
 
 TARGET        := $(BUILD_DIR)/yeself.k
-SOURCES       := boot.s com.s kernel.cpp
+SOURCES       := boot.s com.s kernel.cpp common.hpp comio.hpp comio.cpp
 LINKER_SCRIPT := link.ld
 
 NASM      := nasm
@@ -16,7 +16,7 @@ CXXFLAGS := -target i686-pc-none-elf \
             -fno-rtti \
             -m32 \
             -std=c++23 \
-            -nostdlibinc
+            -masm=intel
 
 LD      := ld.lld
 LDFLAGS := -m elf_i386 -static -nostdlib -T $(LINKER_SCRIPT)

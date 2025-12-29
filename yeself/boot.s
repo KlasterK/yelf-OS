@@ -1,19 +1,9 @@
 bits 32
 
 %define M_TAG align 8, db 0
-%define VIDEO_MEM 0xB8000
-
-; Format of char style:
-; 0bABBBCCCD
-; where A       - whether char is blinking,
-;       B and C - background and foreground colors in 3-bit RGB format,
-;       D       - whether char is light
-%define DEFAULT_CHAR_STYLE 0b10001110
-
 
 section .data
-    sz_fmt db `Hello %s Wo%cld!\n`, 0
-    sz_insertion db `COM`, 0
+    _dummy db 0
 
 
 section .bss
@@ -79,20 +69,6 @@ M_TAG
     dd 12
     ; entry address
     dd a_start
-
-M_TAG
-    ; type = framebuffer tag
-    dw 5
-    ; flags
-    dw 0
-    ; size
-    dd 20
-    ; width of screen
-    dd 80
-    ; height of screen
-    dd 25
-    ; bit depth, 0 means text mode
-    dd 0
 
 M_TAG
     ; type = end tag

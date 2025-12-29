@@ -106,20 +106,6 @@ M_TAG
     ; entry address
     dd start
 
-; M_TAG
-;     ; type = framebuffer tag
-;     dw 5
-;     ; flags
-;     dw 0
-;     ; size
-;     dd 20
-;     ; width of screen
-;     dd 80
-;     ; height of screen
-;     dd 25
-;     ; bit depth, 0 means text mode
-;     dd 0
-
 M_TAG
     ; type = end tag
     dw 0
