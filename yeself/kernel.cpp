@@ -15,21 +15,14 @@ extern "C" void __cdecl c_main()
     char input_buf[256];
     for(;;)
     {
-        size_t i{};
-        for(; i < sizeof(input_buf) - 1; ++i)
+        ctty.write("> ", 2);
+        if(readline(ctty, input_buf, sizeof(input_buf)) == nullptr)
         {
-            char c = getc(ctty);
-            putc(ctty, c);
-            if(c == '\r')
-            {
-                input_buf[i++] = '\n';
-                break;
-            }
-            else input_buf[i] = c;
+            puts(vtty, "\nEOF received\n");
+            break;
         }
-        input_buf[i] = 0;
-
         puts(vtty, input_buf);
+        putc(vtty, '\n');
     }
 
     for(;;)

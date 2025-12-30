@@ -80,3 +80,95 @@ int getc(IFile &file)
     char buf{};
     return file.read(&buf, 1) == 1 ? buf : -1;
 }
+
+char *gets(IFile &file, char *buf, size_t n)
+{
+    char input_buf{};
+    size_t i{};
+    for(; i < n-1; ++i)
+    {
+        if(file.read(&input_buf, 1) != 1)
+        {
+            buf[i] = 0;
+            return nullptr;
+        }
+        if(input_buf == '\n' || input_buf == '\r')
+        {
+            buf[i] = 0;
+            return buf;
+        }
+        buf[i] = input_buf;
+    }
+    buf[i] = 0;
+    return nullptr;
+}
+
+char *readline(IFile &file, char *buf, size_t n, size_t initial_text_length)
+{
+    char input_buf{};
+    size_t i = initial_text_length;
+
+    while(i < n-1)
+    {
+        if(file.read(&input_buf, 1) != 1)
+        {
+            buf[i] = 0;
+            return nullptr;
+        }
+        if(input_buf == '\n' || input_buf == '\r')
+        {
+            putc(file, '\n');
+            buf[i] = 0;
+            return buf;
+        }
+        if(input_buf == 'D' - '@')
+        {
+            file.close();
+            buf[i] = 0;
+            return nullptr;
+        }
+
+        if(input_buf == '\b' || input_buf == '\x7F') // 7F = DEL
+        {
+            if(i > 0)
+            {
+                --i;
+                file.write("\b \b", 3);
+            }
+        }
+        else if(input_buf == 'U' - '@')
+        {
+            for(; i > 0; --i)
+                file.write("\b \b", 3);
+        }
+        else if(input_buf == '\e')
+        {
+            if(file.read(&input_buf, 1) != 1)
+            {
+                buf[i] = 0;
+                return nullptr;
+            }
+            if(input_buf == '[')
+            {
+                for(;;)
+                {
+                    if(file.read(&input_buf, 1) != 1)
+                    {
+                        buf[i] = 0;
+                        return nullptr;
+                    }
+                    if(input_buf >= 0x40 && input_buf <= 0x7E)
+                        break;
+                }
+            }
+        }
+        else 
+        {
+            buf[i++] = input_buf;
+            putc(file, input_buf);
+        }
+    }
+
+    buf[i] = 0;
+    return nullptr;
+}
