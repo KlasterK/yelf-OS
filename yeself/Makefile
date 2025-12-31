@@ -3,7 +3,7 @@ include $(TOP_DIR)/include.mk
 TARGET        := $(BUILD_DIR)/yeself.k
 LINKER_SCRIPT := link.ld
 
-SOURCES := boot.s kernel.cpp comio.cpp vgaio.cpp fileops.cpp
+SOURCES := boot.s kernel.cpp comio.cpp vgaio.cpp fileops.cpp kbdio.cpp
 
 NASM      := nasm
 NASMFLAGS := -f elf32
