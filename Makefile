@@ -2,7 +2,7 @@ TOP_DIR   := $(CURDIR)
 BUILD_DIR := $(TOP_DIR)/build
 export TOP_DIR BUILD_DIR
 
-.PHONY: all iso clean noelf yeself qemu
+.PHONY: all iso clean rebuild noelf yeself qemu
 
 all: noelf yeself iso
 

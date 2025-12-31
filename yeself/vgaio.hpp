@@ -58,10 +58,15 @@ public:
 private:
     static constexpr unsigned Width = 80, Height = 25;
     static inline volatile Char *VideoMemory() { return (volatile Char *)0xB8000; }
-    static Pair<volatile Char *> get_page_begin_end(int page_number);
+
+    inline volatile Char *PageBegin() { return VideoMemory() + m_top_line_number * Width; }
+    inline volatile Char *PageEnd() { return PageBegin() + Width * Height; }
+
+    void scroll_up(int nlines = 1);
 
     CharStyle m_style;
     volatile Char *m_cursor = VideoMemory();
+    unsigned m_top_line_number{};
 };
 
 } // namespace VGA
