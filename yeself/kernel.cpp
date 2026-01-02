@@ -33,9 +33,6 @@ extern "C" void __cdecl c_main()
             puts(tty, "\nEOF received\n");
             break;
         }
-        tty.write("@ ", 2);
-        puts(tty, input_buf);
-        putc(tty, '\n');
     }
 
     for(;;)

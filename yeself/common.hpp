@@ -1,7 +1,8 @@
 #ifndef YESELF_COMMON_HPP
 #define YESELF_COMMON_HPP
 
-#include "stddef.h"
+#include <stdint.h>
+#include <stddef.h>
 
 #ifndef __cdecl
     #define __cdecl __attribute__((cdecl))

@@ -2,6 +2,21 @@
 #include "stdarg.h"
 #include "common.hpp"
 
+// TODO: implement a better algorithm for printing decimals
+static void _print_decimal_recursive(IFile &file, int num)
+{
+    if(num < 0)
+    {
+        putc(file, '-');
+        num = -num;
+    }
+
+    if(num >= 10)
+        _print_decimal_recursive(file, num / 10);
+    
+    putc(file, '0' + num % 10);
+}
+
 int putc(IFile &file, char c)
 {
     return file.write(&c, 1) == 1 ? c : -1;
@@ -66,6 +81,14 @@ int printf(IFile &file, const char *fmt, ...)
                     : '0' + nibble
                 );
             }
+            ++fmt;
+            continue;
+        }
+
+        if(*fmt == 'd')
+        {
+            unsigned value = va_arg(args, int);
+            _print_decimal_recursive(file, value);
             ++fmt;
             continue;
         }
