@@ -67,6 +67,8 @@ private:
     CharStyle m_style;
     volatile Char *m_cursor = VideoMemory();
     unsigned m_top_line_number{};
+
+    bool m_ctrl_v{};
 };
 
 } // namespace VGA
