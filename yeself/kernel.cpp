@@ -3,25 +3,16 @@
 #include "vgaio.hpp"
 #include "kbdio.hpp"
 #include "fileops.hpp"
-
-class TTY : public IFile
-{
-public:
-    inline int read(void *buf, size_t n) override { return m_kbd.read(buf, n); };
-    inline int write(const void *buf, size_t n) override { return m_vga.write(buf, n); };
-    inline int seek(int offset, SeekFrom whence) override { return m_vga.seek(offset, whence); };
-    inline int close() override { return 0; };
-
-private:
-    VGA::TerminalFile m_vga;
-    AT::KeyboardFile  m_kbd;
-};
+#include "filewrappers.hpp"
 
 extern "C" void __cdecl c_main()
 {
     asm volatile ("cli");
 
-    TTY tty;
+    VGA::TerminalFile fvga;
+    COMPortFile fcom;
+    AT::KeyboardFile fkbd;
+    ComposedTTY tty(fvga, fkbd);
     puts(tty, "Hello World!\n");
 
     char input_buf[256];

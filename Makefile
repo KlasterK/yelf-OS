@@ -17,6 +17,14 @@ yeself:
 qemu:
 	qemu-system-i386 -cdrom $(BUILD_DIR)/primus.iso -serial stdio $(F) $(FLAGS) $(EXTRA_FLAGS) $(QEMUFLAGS)
 
+qemu-486:
+	qemu-system-i386 -cdrom $(BUILD_DIR)/primus.iso -serial stdio \
+		-cpu    486 \
+		-m      16 \
+		-icount shift=7,align=off,sleep=on \
+		-accel  tcg,thread=single \
+		$(F) $(FLAGS) $(EXTRA_FLAGS) $(QEMUFLAGS)
+
 clean:
 	rm -rf $(BUILD_DIR)
 

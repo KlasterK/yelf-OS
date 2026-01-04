@@ -1,5 +1,4 @@
 #include "fileops.hpp"
-#include "stdarg.h"
 #include "common.hpp"
 
 // TODO: implement a better algorithm for printing decimals
@@ -27,11 +26,10 @@ int puts(IFile &file, const char *string)
     return file.write(string, strlen(string));
 }
 
-int printf(IFile &file, const char *fmt, ...)
+int printf_va(IFile &file, const char *fmt, va_list args)
 {
     auto orig_fmt = fmt;
-    va_list args;
-    va_start(args, fmt);
+    int star_argument = -1;
 
     while(*fmt != 0)
     {
@@ -46,32 +44,36 @@ int printf(IFile &file, const char *fmt, ...)
             continue;
         }
 
-        if(*++fmt == '%')
+        if(*++fmt == '*')
+        {
+            // Star means get %-specifier argument from the stack
+            star_argument = va_arg(args, int);
+            ++fmt;
+        }
+
+        if(*fmt == '%')
         {
             putc(file, '%');
-            ++fmt;
-            continue;
         }
-
-        if(*fmt == 'c')
+        else if(*fmt == 'c')
         {
             putc(file, va_arg(args, int));
-            ++fmt;
-            continue;
         }
-
-        if(*fmt == 's')
+        else if(*fmt == 's')
         {
             const char *str = va_arg(args, const char *);
             puts(file, str);
-            ++fmt;
-            continue;
         }
-
-        if(*fmt == 'x' || *fmt == 'X')
+        else if(*fmt == 'x' || *fmt == 'X')
         {
+            int nibbles_begin = 32 - 4;
+            if(star_argument > 0 && star_argument < 8)
+            {
+                nibbles_begin -= 4 * (8 - star_argument);
+            }
+
             unsigned value = va_arg(args, unsigned int);
-            for(int i = 32 - 4; i >= 0; i -= 4)
+            for(int i = nibbles_begin; i >= 0; i -= 4)
             {
                 int nibble = (value >> i) & 0xF;
                 putc(
@@ -81,21 +83,26 @@ int printf(IFile &file, const char *fmt, ...)
                     : '0' + nibble
                 );
             }
-            ++fmt;
-            continue;
         }
-
-        if(*fmt == 'd')
+        else if(*fmt == 'd')
         {
             unsigned value = va_arg(args, int);
             _print_decimal_recursive(file, value);
-            ++fmt;
-            continue;
         }
-    }
 
-    va_end(args);
+        ++fmt;
+        star_argument = -1;
+    }
     return fmt - orig_fmt;
+}
+
+int printf(IFile &file, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    int ret = printf_va(file, fmt, args);
+    va_end(args);
+    return ret;
 }
 
 int getc(IFile &file)
