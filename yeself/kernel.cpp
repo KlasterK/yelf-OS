@@ -5,8 +5,10 @@
 #include "fileops.hpp"
 #include "filewrappers.hpp"
 #include "pcidevscanner.hpp"
+#include "logging.hpp"
+#include "memoryops.hpp"
 
-void print_pci_devs(IFile &out)
+static void log_pci_devs()
 {
     PCI::DeviceInfoIterator it;
     PCI::Identification ident;
@@ -14,8 +16,8 @@ void print_pci_devs(IFile &out)
 
     while(PCI::next_device_info(it, ident, cls))
     {
-        printf(
-            out, "PCI %*x:%*x.%*x %*x:%*x Class %*x Subclass %*x ProgIf %*x Rev %*x\n",
+        Log::printf(
+            Log::Info, "PCI %*x:%*x.%*x %*x:%*x Class %*x Subclass %*x ProgIf %*x Rev %*x",
             2, it.addr.bus, 
             2, it.addr.device, 
             1, it.addr.function,
@@ -37,11 +39,22 @@ extern "C" void __cdecl c_main()
     COMPortFile fcom;
     AT::KeyboardFile fkbd;
     ComposedTTY tty(fvga, fkbd);
-    puts(tty, "Hello World!\n");
 
-    puts(tty, "Scanning PCI devices...\n");
-    print_pci_devs(tty);
-    puts(tty, "Scanning has been completed\n");
+    Log::Level log_table[] = {
+        {Log::Trace,    "TRACE",    &fcom, nullptr},
+        {Log::Debug,    "DEBUG",    &fcom, nullptr},
+        {Log::Info,     "INFO",     &fcom, &fvga},
+        {Log::Warning,  "WARNING",  &fcom, &fvga},
+        {Log::Error,    "ERROR",    &fcom, &fvga},
+        {Log::Critical, "CRITICAL", &fcom, &fvga},
+    };
+    Log::init(log_table, sizeof(log_table) / sizeof(*log_table));
+
+    Log::printf(Log::Info, "Hello World!");
+
+    Log::printf(Log::Info, "Scanning PCI devices...");
+    log_pci_devs();
+    Log::printf(Log::Info, "Scanning has been completed");
 
     char input_buf[256];
     for(;;)
@@ -62,14 +75,10 @@ extern "C" void __cdecl c_main()
 
 extern "C" void __cxa_pure_virtual()
 {
-    asm volatile ("cli");
-    for(;;)
-        asm volatile ("hlt");
+    Log::panic("unimplemented __cxa_pure_virtual called, terminating.");
 }
 
 void operator delete(void*, unsigned int) 
 {
-    asm volatile ("cli");
-    for(;;)
-        asm volatile ("hlt");
+    Log::panic("unimplemented operator delete called, terminating.");
 }

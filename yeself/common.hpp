@@ -33,7 +33,7 @@ constexpr T clamp(T x, T lower, T upper) { return max(lower, min(upper, x)); }
 constexpr size_t strlen(const char* s) 
 {
     size_t i{};
-    while(s[i] != 0) ++i;
+    while(s[i++] != 0) {}
     return i;
 }
 

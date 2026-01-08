@@ -4,7 +4,7 @@ TARGET        := $(BUILD_DIR)/yeself.k
 LINKER_SCRIPT := link.ld
 
 SOURCES := boot.s kernel.cpp comio.cpp vgaio.cpp fileops.cpp kbdio.cpp
-SOURCES += filewrappers.cpp pcidevscanner.cpp
+SOURCES += filewrappers.cpp pcidevscanner.cpp logging.cpp
 
 NASM      := nasm
 NASMFLAGS := -f elf32
