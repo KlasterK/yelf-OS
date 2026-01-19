@@ -12,7 +12,7 @@ constexpr size_t BlockSize = 512;
 class DriveFile : public IFile
 {
 public:
-    DriveFile(uint8_t drive_num);
+    DriveFile(bool is_secondary, bool is_slave);
     ~DriveFile() override;
     int read(void *buf, size_t n) override;
     int write(const void *buf, size_t n) override;
@@ -23,7 +23,7 @@ private:
     uint16_t m_command_block_port_base{};
     uint16_t m_control_port_base{};
     uint16_t m_bm_port_base{};
-    uint8_t  m_drive{};
+    bool     m_is_slave{};
     uint32_t m_lba{};
 };
 

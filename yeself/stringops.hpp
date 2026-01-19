@@ -58,9 +58,9 @@ constexpr const char *string_lstrip(const char *s, size_t n)
     return s;
 }
 
-constexpr char *string_lstrip(char *s, size_t n)
+constexpr char *string_lstrip(char *s)
 {
-    for(size_t i{}; i < n; ++i)
+    for(size_t i{}; s[i] != 0; ++i)
     {
         if(!is_whitespace(s[i]))
             return s + i;
@@ -68,7 +68,7 @@ constexpr char *string_lstrip(char *s, size_t n)
     return s;
 }
 
-constexpr size_t string_rstrip(char *s, size_t n)
+constexpr size_t string_rstrip(char *s)
 {
     if(*s == 0)
         return 0;
@@ -80,10 +80,10 @@ constexpr size_t string_rstrip(char *s, size_t n)
     return end - s;
 }
 
-constexpr Pair<char *, size_t> string_strip(char *s, size_t n)
+constexpr Pair<char *, size_t> string_strip(char *s)
 {
-    char *right_s = string_lstrip(s, n);
-    size_t nstripped = string_rstrip(right_s, n - (right_s - s));
+    char *right_s = string_lstrip(s);
+    size_t nstripped = string_rstrip(right_s);
     return {right_s, nstripped};
 }
 

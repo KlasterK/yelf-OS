@@ -15,7 +15,7 @@ public:
     virtual int write(const void *buf, size_t n) = 0;
     virtual int seek(int offset, SeekFrom whence) = 0;
     virtual int close() = 0;
-    virtual int ioctl(uint32_t function, uintptr_t argument) { return -1; };
+    virtual int ioctl(uint32_t, void *) { return -1; };
 };
 
 namespace IOCtlFunctions

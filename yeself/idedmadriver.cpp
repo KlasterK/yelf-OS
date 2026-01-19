@@ -23,8 +23,7 @@ namespace RegOff
 
 namespace BusMastering
 {
-    constexpr uint16_t PrimaryBus = 0x0;
-    constexpr uint16_t SecondaryBus = 0x8;
+    constexpr uint16_t BusOffset = 0x8;
 
     constexpr uint16_t Command = 0x0;
     constexpr uint16_t Status = 0x2;
@@ -41,7 +40,6 @@ namespace BusMastering
     namespace StatusFlags
     {
         constexpr uint8_t Active = 1 << 0;
-        constexpr uint8_t Error  = 1 << 1;
         constexpr uint8_t IRQ    = 1 << 2;
     }
 }
@@ -59,10 +57,8 @@ namespace ATA
     }
     namespace Command
     {
-        constexpr uint16_t ReadDMA_28bitLBA = 0xC8;
-        constexpr uint16_t ReadDMA_48bitLBA = 0x25;
+        constexpr uint16_t ReadDMA_28bitLBA  = 0xC8;
         constexpr uint16_t WriteDMA_28bitLBA = 0xCA;
-        constexpr uint16_t WriteDMA_48bitLBA = 0x35;
     }
     union HeadReg
     {
@@ -70,10 +66,10 @@ namespace ATA
         struct
         {
             uint8_t lba_upper_bits : 4;
-            uint8_t drive_num : 1; // 0 = pri, 1 = sec
-            uint8_t always1 : 1;
-            uint8_t do_use_lba : 1;
-            uint8_t always1_ : 1;
+            uint8_t is_slave       : 1;
+            uint8_t always1        : 1;
+            uint8_t do_use_lba     : 1;
+            uint8_t always1_       : 1;
         } __packed;
     } __packed;
 }
@@ -135,8 +131,11 @@ static bool _enable_bm(PCI::Address addr)
 }
 
 // We count that bm_port_base is already summed with bus offset
-static void _setup_bm(uint16_t bm_port_base, uint32_t prdt_phys_addr)
+static void _setup_bm(uint16_t bm_port_base, uint32_t prdt_phys_addr, bool is_secondary_bus)
 {
+    if(is_secondary_bus)
+        bm_port_base += BusMastering::BusOffset;
+
     asm volatile("out dx, al" : : "a"(prdt_phys_addr & 0xFF), 
                  "d"(bm_port_base + BusMastering::PRDTPhysAddrByte0));
 
@@ -155,7 +154,7 @@ static void _setup_bm(uint16_t bm_port_base, uint32_t prdt_phys_addr)
 
 static void _ata_begin_transaction(
     uint16_t command_block_port_base, uint16_t bm_port_base, 
-    uint8_t drive_num, uint32_t lba, uint8_t sector_count,
+    bool is_slave, uint32_t lba, uint8_t sector_count,
     bool is_read
 )
 {
@@ -169,7 +168,7 @@ static void _ata_begin_transaction(
                  "d"(command_block_port_base + ATA::Port::LBAHigh));
                  
     ATA::HeadReg head{
-        .always1=1, .always1_=1, .do_use_lba=1, .drive_num=drive_num,
+        .always1=1, .always1_=1, .do_use_lba=1, .is_slave=is_slave,
         .lba_upper_bits=uint8_t(command_block_port_base >> 24 & 0x0F)
     };
 
@@ -222,7 +221,9 @@ static void _ata_end_transaction(uint16_t bm_port_base)
     asm volatile("wbinvd" : : : "memory");
 }
 
-IDE::DriveFile::DriveFile(uint8_t drive_num)
+IDE::DriveFile::DriveFile(bool is_secondary, bool is_slave)
+    : m_is_slave(is_slave)
+    , m_lba(0)
 {
     if(g_object_counter)
     {
@@ -238,7 +239,7 @@ IDE::DriveFile::DriveFile(uint8_t drive_num)
         return;
     }
 
-    if(drive_num == 0)
+    if(!is_secondary)
     {
         m_command_block_port_base = _get_port_base(addr, RegOff::BAR0_PriCommandBlock);
         if(m_command_block_port_base == 0)
@@ -248,7 +249,7 @@ IDE::DriveFile::DriveFile(uint8_t drive_num)
         if(m_control_port_base == 0)
             m_control_port_base = 0x3F6;
     }
-    else if(drive_num == 1)
+    else
     {
         m_command_block_port_base = _get_port_base(addr, RegOff::BAR2_SecCommandBlock);
         if(m_command_block_port_base == 0)
@@ -258,12 +259,11 @@ IDE::DriveFile::DriveFile(uint8_t drive_num)
         if(m_control_port_base == 0)
             m_control_port_base = 0x376;
     }
-    else return;
 
     m_bm_port_base = _get_port_base(addr, RegOff::BAR4_BusMaster);
     Log::printf(Log::Debug, "IDE ports: Block %x Control %x BM %x", m_command_block_port_base, m_control_port_base, m_bm_port_base);
     _enable_bm(addr);
-    _setup_bm(m_bm_port_base, reinterpret_cast<uint32_t>(_prdt));
+    _setup_bm(m_bm_port_base, reinterpret_cast<uint32_t>(_prdt), is_secondary);
 }
 
 IDE::DriveFile::~DriveFile()
@@ -283,7 +283,7 @@ int IDE::DriveFile::read(void *buf, size_t n)
     auto end = it + n;
     for(; it < end; it += 512)
     {
-        _ata_begin_transaction(m_command_block_port_base, m_bm_port_base, m_drive, m_lba++, 1, true);
+        _ata_begin_transaction(m_command_block_port_base, m_bm_port_base, m_is_slave, m_lba++, 1, true);
         _ata_poll_dma(m_bm_port_base);
         _ata_end_transaction(m_bm_port_base);
 
@@ -307,7 +307,7 @@ int IDE::DriveFile::write(const void *buf, size_t n)
     {
         copy_memory_tml(_dma_buffer, it, 512);
 
-        _ata_begin_transaction(m_command_block_port_base, m_bm_port_base, m_drive, m_lba++, 1, false);
+        _ata_begin_transaction(m_command_block_port_base, m_bm_port_base, m_is_slave, m_lba++, 1, false);
         _ata_poll_dma(m_bm_port_base);
         _ata_end_transaction(m_bm_port_base);
     }

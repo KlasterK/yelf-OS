@@ -32,8 +32,8 @@ static constexpr size_t file_size_to_blocks_count(size_t size)
 
 constexpr bool Directory::is_existing_iterator(Directory::Iterator iterator) const
 {
-    return iterator >= (sizeof(FileHeader) / 4)
-        && iterator <  (sizeof(FileHeader) / 4 + m_records_count - 1);
+    return iterator >= ((int32_t)sizeof(FileHeader) / 4)
+        && (uint32_t)iterator < (sizeof(FileHeader) / 4 + m_records_count - 1);
 }
 
 
@@ -373,9 +373,7 @@ size_t Directory::get_name(Iterator iterator, char *buf, size_t size) const
     uint32_t file_lba = block_buf_u32[_dirit2offset(iterator)];
 
     _read_lba(*m_partition, file_lba, block_buf_u32);
-    return strlcpy(
-        buf, _file_hdr_of(block_buf_u32).name, sizeof(FileHeader::name)
-    );
+    return strlcpy(buf, _file_hdr_of(block_buf_u32).name, min(size, sizeof(FileHeader::name)));
 }
 
 

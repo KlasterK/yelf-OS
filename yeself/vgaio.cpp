@@ -47,6 +47,10 @@ int TerminalFile::write(const void *buf, size_t n)
         {
             m_ctrl_v = 0;
             *(Char *)m_cursor++ = {.text = c, .style = m_style};
+
+            if((m_cursor - PageBegin()) % Width == 0)
+                ++m_printed_lines_count;
+
             if (m_cursor >= PageEnd())
                 scroll_up();
         }
@@ -65,10 +69,16 @@ int TerminalFile::write(const void *buf, size_t n)
 
             if (m_cursor >= PageEnd())
                 scroll_up();
+            
+            ++m_printed_lines_count;
         }
         else if (c == '\t')
         {
             m_cursor += 8 - (m_cursor - PageBegin()) % 8;
+
+            if((m_cursor - PageBegin()) % Width == 0)
+                ++m_printed_lines_count;
+
             if (m_cursor >= PageEnd())
                 scroll_up();
         }
@@ -83,6 +93,7 @@ int TerminalFile::write(const void *buf, size_t n)
             m_top_line_number = 0;
             scroll_up(0);
             m_cursor = PageBegin();
+            m_printed_lines_count = 0;
 
             // Clean the screen and print current line for the buffer
             fill_memory_tml((uint16_t *)PageBegin(), Char{.text = ' ', .style = m_style}.raw, Width * Height);
@@ -96,6 +107,10 @@ int TerminalFile::write(const void *buf, size_t n)
         else
         {
             *(Char *)m_cursor++ = {.text = c, .style = m_style};
+
+            if((m_cursor - PageBegin()) % Width == 0)
+                ++m_printed_lines_count;
+
             if (m_cursor >= PageEnd())
                 scroll_up();
         }
@@ -116,19 +131,19 @@ int TerminalFile::seek(int offset, SeekFrom whence)
     return m_cursor - PageBegin();
 }
 
-int VGA::TerminalFile::ioctl(uint32_t function, uintptr_t argument)
+int VGA::TerminalFile::ioctl(uint32_t function, void *)
 {
     switch(function)
     {
         using namespace IOCtlFunctions;
     case IsTerminal:
-        return 1;
+        return 0;
     case GetTerminalWidth:
         return Width;
     case GetTerminalHeight:
         return Height;
     case GetLineCounter:
-        return (m_cursor - PageBegin()) / Width;
+        return m_printed_lines_count;
     default:
         return -1;
     }

@@ -102,7 +102,7 @@ Shell::CommandResult Shell::process_command(char *buf, size_t size)
     if(nullptr == readline(m_tty, buf, size))
         return CommandResult::EOF;
     
-    auto [command, input_size] = string_strip(buf, size);
+    auto [command, input_size] = string_strip(buf);
     const char *argument = nullptr;
     for(size_t i{}; command[i] != 0; ++i)
     {
@@ -169,6 +169,7 @@ Shell::CommandResult Shell::process_command(char *buf, size_t size)
             case IDirectory::NodeType::File:
                 type = "File";
                 break;
+            default:
             }
             
             printf(m_tty, "%s - %s (%x)\n", type, buf, iter);
@@ -207,20 +208,16 @@ Shell::CommandResult Shell::process_command(char *buf, size_t size)
             return CommandResult::ExecError;
         }
 
-        Log::printf(Log::Trace, "cat tp 0");
         size_t nread{};
         for(;;)
         {
-            Log::printf(Log::Trace, "cat tp 1");
             nread = file->read(buf, size);
             if(nread < 1)
                 break;
             
-            Log::printf(Log::Trace, "cat tp 2 %d", nread);
             m_tty.write(buf, nread);
         }
         
-        Log::printf(Log::Trace, "cat tp 3 %*x", 2, buf[nread-1]);
         if(nread >= 1 && buf[nread-1] != '\n')
             puts(m_tty, "\n(no newline)\n");
 
@@ -236,9 +233,15 @@ Shell::CommandResult Shell::process_command(char *buf, size_t size)
 
     if(0 == strcmp("more", command))
     {
+        if(m_tty.ioctl(IOCtlFunctions::IsTerminal, nullptr) < 0)
+        {
+            puts(m_tty, "Pager cannot be used out of terminal.\n");
+            return CommandResult::ExecError;
+        }
+
         if(argument == nullptr)
         {
-            puts(m_tty, "usage: cat <file>\n");
+            puts(m_tty, "usage: more <file>\n");
             return CommandResult::BadUsage;
         }
 
@@ -265,22 +268,41 @@ Shell::CommandResult Shell::process_command(char *buf, size_t size)
             return CommandResult::ExecError;
         }
 
-        Log::printf(Log::Trace, "cat tp 0");
-        size_t nread{};
+        // size_t nread{};
+        // for(;;)
+        // {
+        //     nread = file->read(buf, size);
+        //     if(nread < 1)
+        //         break;
+            
+        //     m_tty.write(buf, nread);
+        // }
+        
+        // if(nread >= 1 && buf[nread-1] != '\n')
+        //     puts(m_tty, "\n(no newline)\n");
+
+        int height = m_tty.ioctl(IOCtlFunctions::GetTerminalHeight, nullptr);
+        putc(m_tty, '\f');
         for(;;)
         {
-            Log::printf(Log::Trace, "cat tp 1");
-            nread = file->read(buf, size);
-            if(nread < 1)
+            int c = getc(*file);
+            if(c < 0)
                 break;
-            
-            Log::printf(Log::Trace, "cat tp 2 %d", nread);
-            m_tty.write(buf, nread);
+
+            putc(m_tty, c);
+            if(m_tty.ioctl(IOCtlFunctions::GetLineCounter, nullptr) == height - 1)
+            {
+                constexpr const char *bs32 = "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b";
+                constexpr const char *sp32 = "                                ";
+
+                puts(m_tty, "\b\nPress any key to continue . . . ");
+                getc(m_tty);
+                puts(m_tty, bs32);
+                puts(m_tty, sp32);
+                puts(m_tty, bs32);
+                putc(m_tty, '\f');
+            }
         }
-        
-        Log::printf(Log::Trace, "cat tp 3 %*x", 2, buf[nread-1]);
-        if(nread >= 1 && buf[nread-1] != '\n')
-            puts(m_tty, "\n(no newline)\n");
 
         file->~IFile();
         return CommandResult::Ok;

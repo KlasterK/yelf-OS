@@ -64,9 +64,9 @@ public:
     Iterator next(Iterator prev_it) const override;
     Iterator find(const char *name) const override;
 
-    inline Iterator create_file(const char *name) override { return -1; };
-    inline Iterator create_directory(const char *name) override { return -1; };
-    inline bool remove(Iterator it) override { return false; };
+    inline Iterator create_file(const char *) override { return -1; };
+    inline Iterator create_directory(const char *) override { return -1; };
+    inline bool remove(Iterator) override { return false; };
 
     size_t get_name_length(Iterator it) const override;
     size_t get_name(Iterator it, char *buf, size_t size) const override;

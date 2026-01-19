@@ -22,6 +22,7 @@ CXXFLAGS += -std=c++23
 CXXFLAGS += -masm=intel
 CXXFLAGS += -Wall
 CXXFLAGS += -Wextra
+CXXFLAGS += -Wno-vla-cxx-extension
 
 LD      := clang++
 LDFLAGS := -m32

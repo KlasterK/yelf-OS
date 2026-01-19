@@ -52,7 +52,7 @@ public:
     int write(const void *buf, size_t n) override;
     int seek(int offset, SeekFrom whence) override;
     inline int close() override { return 0; };
-    int ioctl(uint32_t function, uintptr_t argument) override;
+    int ioctl(uint32_t function, void *argument) override;
 
 private:
     static constexpr unsigned Width = 80, Height = 25;
@@ -65,7 +65,7 @@ private:
 
     CharStyle m_style;
     volatile Char *m_cursor = VideoMemory();
-    unsigned m_top_line_number{};
+    unsigned m_top_line_number{}, m_printed_lines_count{};
 
     bool m_ctrl_v{};
 };
