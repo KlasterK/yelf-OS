@@ -2,6 +2,7 @@
 #include "memoryops.hpp"
 #include "comio.hpp"
 #include "fileops.hpp"
+#include "stl.hpp"
 
 using namespace VGA;
 
@@ -113,4 +114,22 @@ int TerminalFile::seek(int offset, SeekFrom whence)
         m_cursor = PageEnd() - max(0, offset) - 1;
 
     return m_cursor - PageBegin();
+}
+
+int VGA::TerminalFile::ioctl(uint32_t function, uintptr_t argument)
+{
+    switch(function)
+    {
+        using namespace IOCtlFunctions;
+    case IsTerminal:
+        return 1;
+    case GetTerminalWidth:
+        return Width;
+    case GetTerminalHeight:
+        return Height;
+    case GetLineCounter:
+        return (m_cursor - PageBegin()) / Width;
+    default:
+        return -1;
+    }
 }

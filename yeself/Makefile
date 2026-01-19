@@ -5,6 +5,7 @@ LINKER_SCRIPT := link.ld
 
 SOURCES := boot.s kernel.cpp comio.cpp vgaio.cpp fileops.cpp kbdio.cpp
 SOURCES += filewrappers.cpp pcidevscanner.cpp logging.cpp idedmadriver.cpp
+SOURCES += tarfs.cpp basickshell.cpp
 
 NASM      := nasm
 NASMFLAGS := -f elf32

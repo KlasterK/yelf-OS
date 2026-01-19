@@ -15,26 +15,6 @@
 // C++ export
 extern "C" void __cdecl c_main();
 
-template<typename T>
-struct Pair
-{
-    T first, second;
-};
-
-template<typename T>
-constexpr T min(T a, T b) { return (a < b) ? a : b; }
-
-template<typename T>
-constexpr T max(T a, T b) { return (a > b) ? a : b; }
-
-template<typename T>
-constexpr T clamp(T x, T lower, T upper) { return max(lower, min(upper, x)); }
-
-constexpr size_t strlen(const char* s) 
-{
-    size_t i{};
-    while(s[i++] != 0) {}
-    return i;
-}
+inline void *operator new(size_t, void *p) { return p; }
 
 #endif // YESELF_COMMON_HPP

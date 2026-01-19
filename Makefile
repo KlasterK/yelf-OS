@@ -33,13 +33,13 @@ qemu-486: $(BUILD_DIR)/disk.image
 		$(F) $(FLAGS) $(EXTRA_FLAGS) $(QEMUFLAGS)
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR)/*.o $(BUILD_DIR)/*.k $(BUILD_DIR)/*.iso $(BUILD_DIR)/iso/
 
 rebuild: clean all
 
 $(BUILD_DIR)/disk.image:
 	dd if=/dev/zero of=$@ bs=1M count=4
-	echo "Hello World!" | dd of=$@ bs=1 count=512 conv=notrunc
+	echo "Hello World!" | dd of=$@ conv=notrunc
 
 bldrun: all qemu
 

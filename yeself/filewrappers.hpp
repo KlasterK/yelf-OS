@@ -11,6 +11,7 @@ public:
     inline int write(const void *buf, size_t n) override { return m_out.write(buf, n); };
     inline int seek(int offset, SeekFrom whence) override { return m_out.seek(offset, whence); };
     inline int close() override { return 0; };
+    inline int ioctl(uint32_t f, uintptr_t a) override { return m_out.ioctl(f, a) < 0 ? m_in.ioctl(f, a) : -1; };
 
 private:
     IFile &m_out, &m_in;

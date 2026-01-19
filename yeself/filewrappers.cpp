@@ -1,5 +1,6 @@
 #include "filewrappers.hpp"
 #include "common.hpp"
+#include "stl.hpp"
 
 BufferFile::BufferFile(void *begin, void *end, bool readable, bool writable)
     : m_begin((char *)begin)

@@ -1,5 +1,6 @@
 #include "fileops.hpp"
 #include "common.hpp"
+#include "stringops.hpp"
 
 // TODO: implement a better algorithm for printing decimals
 static void _print_decimal_recursive(IFile &file, int num)

@@ -8,6 +8,9 @@
 #include "idedmadriver.hpp"
 #include "logging.hpp"
 #include "memoryops.hpp"
+#include "tarfs.hpp"
+#include "stringops.hpp"
+#include "basickshell.hpp"
 
 static void log_pci_devs()
 {
@@ -111,39 +114,26 @@ extern "C" void __cdecl c_main()
     log_pci_devs();
     Log::printf(Log::Info, "Scanning has been completed");
 
-    Log::printf(Log::Info, "Initialising IDE driver (primary drive)...");
     IDE::DriveFile drive(0);
-    Log::printf(Log::Info, "IDE driver constructed");
+    Log::printf(Log::Info, "IDE driver constructed (primary master)");
 
-    Log::printf(Log::Info, "Reading from LBA 0... (use keyboard to continue)");
-    hexed_ide(drive, tty);
-
-    Log::printf(Log::Info, "Testing LBA 2");
+    auto root_variant = TAR::mount(drive);
+    if(auto *err = root_variant.get_if<TAR::MountError>())
+        Log::panic("tarfs mount failed with code %d", *err);
     
-    Log::printf(Log::Info, "1. Old data");
-    drive.seek(512 * 2, IFile::SeekFrom::Begin);
-    hexed_ide(drive, tty);
+    TAR::Directory root = Move(*root_variant.get_if<TAR::Directory>());
+    Log::printf(Log::Info, "tarfs mounted successfully");
 
-    Log::printf(Log::Info, "2. Write data");
-    drive.seek(-512, IFile::SeekFrom::CurrentPosition);
-    readline_write_ide(drive, tty);
+    char node_names_buf[64 * 8];
+    alignas(16) uint8_t objects_buf[sizeof(TAR::Directory) * 8];
+    CWDStack cwd_stack(root, {node_names_buf, 64, objects_buf, sizeof(TAR::Directory), 8});
 
-    Log::printf(Log::Info, "3. New data");
-    drive.seek(-512, IFile::SeekFrom::CurrentPosition);
-    hexed_ide(drive, tty);
+    Shell sh(tty, cwd_stack);
+    sh.print_start_message();
+    char input_buf[128];
+    while(sh.process_command(input_buf, sizeof(input_buf)) != Shell::CommandResult::EOF) {}
 
-    char input_buf[256];
-    for(;;)
-    {
-        tty.write("> ", 2);
-        if(readline(tty, input_buf, sizeof(input_buf)) == nullptr)
-        {
-            puts(tty, "\nEOF received\n");
-            break;
-        }
-    }
-
-    for(;;)
+    for(puts(tty, "\nEOF received\n");;)
         asm volatile ("hlt");
 }
 
@@ -158,3 +148,9 @@ void operator delete(void*, unsigned int)
 {
     Log::panic("unimplemented operator delete called, terminating.");
 }
+
+extern "C" void *memcpy(void *dst, const void *src, size_t n)
+{
+    copy_memory_tml((uint8_t *)dst, (const uint8_t *)src, n);
+    return dst;
+}	
