@@ -15,7 +15,7 @@ constexpr size_t strlen(const char *s)
 constexpr int strcmp(const char *a, const char *b)
 {
     while(*a && *a++ == *b++) {}
-    return *(const unsigned char *)--a - *(const unsigned char *)--b;
+    return *(const unsigned char *)a - *(const unsigned char *)b;
 }
 
 constexpr int strncmp(const char *a, const char *b, size_t n)

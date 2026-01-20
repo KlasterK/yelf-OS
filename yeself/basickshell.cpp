@@ -92,7 +92,7 @@ Shell::Shell(IFile &tty, CWDStack &cwd_stack)
 
 void Shell::print_start_message()
 {
-    puts(m_tty, "Operations: cd pwd ls cat help more\n");
+    puts(m_tty, "Operations: cd pwd ls cat help more ls|more\n");
 }
 
 Shell::CommandResult Shell::process_command(char *buf, size_t size)
@@ -148,31 +148,60 @@ Shell::CommandResult Shell::process_command(char *buf, size_t size)
         return CommandResult::Ok;
     }
 
-    if(0 == strcmp("ls", command))
+    if (bool is_more_version = 0 == strcmp("ls|more", command);
+        is_more_version || 0 == strcmp("ls", command))
     {
         auto iter = IDirectory::before_begin_iter();
         auto &cwd = m_cwd_stack.get_cwd();
-        for(;;)
+
+        size_t max_width = min(size, (size_t)m_tty.ioctl(IOCtlFunctions::GetTerminalWidth, nullptr));
+        size_t max_name_width = max_width - 30;
+
+        for(int i{}, height = m_tty.ioctl(IOCtlFunctions::GetTerminalHeight, nullptr);; ++i)
         {
             iter = cwd.next(iter);
             if(IDirectory::is_error_iter(iter))
                 break;
             
-            cwd.get_name(iter, buf, size);
+            if(cwd.get_name_length(iter) >= max_name_width)
+            {
+                cwd.get_name(iter, buf, max_name_width - 3);
+                buf[max_name_width - 1] = '.';
+                buf[max_name_width - 2] = '.';
+                buf[max_name_width - 3] = '.';
+            }
+            else cwd.get_name(iter, buf, max_name_width);
 
-            const char *type = "Unknown"; 
-            switch(cwd.get_node_type(iter))
+            switch(auto type = cwd.get_node_type(iter))
             {
             case IDirectory::NodeType::Directory:
-                type = "Directory";
+                puts(m_tty, "Directory - ");
                 break;
             case IDirectory::NodeType::File:
-                type = "File";
+                puts(m_tty, "File - ");
                 break;
             default:
+                printf(m_tty, "Unknown (%*x) - ", sizeof(type) * 2, type);
             }
             
-            printf(m_tty, "%s - %s (%x)\n", type, buf, iter);
+            for(size_t i{}; buf[i] != 0; ++i)
+            {
+                putc(m_tty, 'V' - '@');
+                putc(m_tty, buf[i]);
+            }
+            printf(m_tty, " (%x)\n", iter);
+
+            if(is_more_version && i == height - 2)
+            {
+                i = -1; // will be increased
+
+                puts(m_tty, "Press any key to continue (q = quit) . . . ");
+                int gotc = getc(m_tty);
+                putc(m_tty, '\n');
+
+                if(gotc == 'q')
+                    break;
+            }
         }
         return CommandResult::Ok;
     }
@@ -268,19 +297,6 @@ Shell::CommandResult Shell::process_command(char *buf, size_t size)
             return CommandResult::ExecError;
         }
 
-        // size_t nread{};
-        // for(;;)
-        // {
-        //     nread = file->read(buf, size);
-        //     if(nread < 1)
-        //         break;
-            
-        //     m_tty.write(buf, nread);
-        // }
-        
-        // if(nread >= 1 && buf[nread-1] != '\n')
-        //     puts(m_tty, "\n(no newline)\n");
-
         int height = m_tty.ioctl(IOCtlFunctions::GetTerminalHeight, nullptr);
         putc(m_tty, '\f');
         for(;;)
@@ -295,8 +311,13 @@ Shell::CommandResult Shell::process_command(char *buf, size_t size)
                 constexpr const char *bs32 = "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b";
                 constexpr const char *sp32 = "                                ";
 
-                puts(m_tty, "\b\nPress any key to continue . . . ");
-                getc(m_tty);
+                puts(m_tty, "\b\nPress any key to continue (q = quit) . . . ");
+                int gotc = getc(m_tty);
+                if(gotc == 'q')
+                {
+                    putc(m_tty, '\n');
+                    break;
+                }
                 puts(m_tty, bs32);
                 puts(m_tty, sp32);
                 puts(m_tty, bs32);
