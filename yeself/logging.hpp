@@ -9,10 +9,10 @@ namespace Log
 {
     struct Level
     {
-        int value;
-        const char *name;
-        IFile *primary_file;
-        IFile *secondary_file;
+        int value{};
+        const char *name{};
+        IFile *primary_file{};
+        IFile *secondary_file{};
     };
 
     void init(Level *table, size_t size);

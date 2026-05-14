@@ -67,9 +67,9 @@ namespace ATA
         {
             uint8_t lba_upper_bits : 4;
             uint8_t is_slave       : 1;
-            uint8_t always1        : 1;
+            uint8_t always_set_1   : 1;
             uint8_t do_use_lba     : 1;
-            uint8_t always1_       : 1;
+            uint8_t always_set_2   : 1;
         } __packed;
     } __packed;
 }
@@ -168,7 +168,7 @@ static void _ata_begin_transaction(
                  "d"(command_block_port_base + ATA::Port::LBAHigh));
                  
     ATA::HeadReg head{
-        .always1=1, .always1_=1, .do_use_lba=1, .is_slave=is_slave,
+        .always_set_1=1, .always_set_2=1, .do_use_lba=1, .is_slave=is_slave,
         .lba_upper_bits=uint8_t(command_block_port_base >> 24 & 0x0F)
     };
 

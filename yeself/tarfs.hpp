@@ -20,17 +20,17 @@ constexpr uint32_t Version = 1;
 
 struct SystemHeader
 {
-    uint8_t signature[8];
-    uint32_t version;
+    uint8_t signature[8]{};
+    uint32_t version{};
 } __packed;
 static_assert(sizeof(SystemHeader) < BlockSize);
 
 struct FileHeader
 {
-    char name[64];
-    uint32_t size;
-    IDirectory::NodeType type;
-    uint8_t unused_a[3];
+    char name[64]{};
+    uint32_t size{};
+    IDirectory::NodeType type{};
+    uint8_t unused_a[3]{};
 } __packed;
 static_assert(sizeof(IDirectory::NodeType) == 1);
 static_assert(sizeof(FileHeader) % 8 == 0);
@@ -77,7 +77,7 @@ public:
 
 private:
     Directory(IFile &partition, size_t lba);
-    IFile *m_partition;
+    IFile *m_partition{};
     size_t m_lba{}, m_records_count{};
 
     constexpr bool is_existing_iterator(int iterator) const;

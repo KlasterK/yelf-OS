@@ -8,8 +8,8 @@
 template<typename T, typename U>
 struct Pair
 {
-    T first;
-    U second;
+    T first{};
+    U second{};
 };
 
 
@@ -157,8 +157,8 @@ public:
     }
 
 private:
-    void *m_value;
-    int m_type_idx;
+    void *m_value{};
+    int m_type_idx{};
 };
 
 
@@ -173,7 +173,7 @@ public:
 
 private:
     T &m_instance;
-    void (*m_deleter)(T &);
+    void (*m_deleter)(T &){};
 };
 
 
@@ -219,8 +219,8 @@ public:
     }
 
 private:
-    alignas(GetMaxAlignof<Ts...>()) uint8_t m_storage[GetMaxSizeof<Ts...>()];
-    int m_type_idx;
+    alignas(GetMaxAlignof<Ts...>()) uint8_t m_storage[GetMaxSizeof<Ts...>()]{};
+    int m_type_idx{};
 
     static constexpr void (*DeletersTable[]) (void *) = {
         +[](void *p) { static_cast<Ts *>(p)->~Ts(); } ...
