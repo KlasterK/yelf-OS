@@ -228,4 +228,8 @@ private:
 };
 
 
+template<typename T, typename U>
+concept SameAs = IsSame<T, U>::Value;
+
+
 #endif // YESELF_STL_HPP
