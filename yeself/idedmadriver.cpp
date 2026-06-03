@@ -111,9 +111,9 @@ static bool _find_ide(PCI::Address &out_addr)
 static uint16_t _get_port_base(PCI::Address addr, uint32_t regoff)
 {
     addr.register_offset = regoff;
-    Log::printf(Log::Trace, "Regoff %*x Device %*x", 2, addr.register_offset, 2, addr.device);
+    Log::printf(Log::Debug, "Regoff %*x Device %*x", 2, addr.register_offset, 2, addr.device);
     uint32_t port = PCI::device_get(addr);
-    Log::printf(Log::Trace, "Port from pci: %x", port);
+    Log::printf(Log::Debug, "Port from pci: %x", port);
     return port & 0xFFFC;
 }
 

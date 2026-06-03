@@ -45,7 +45,6 @@ extern "C" void __cdecl c_main()
     ComposedTTY tty(fvga, fkbd);
 
     Log::Level log_table[] = {
-        {Log::Trace,    "TRACE",    &fcom, nullptr},
         {Log::Debug,    "DEBUG",    &fcom, nullptr},
         {Log::Info,     "INFO",     &fcom, &fvga},
         {Log::Warning,  "WARNING",  &fcom, &fvga},

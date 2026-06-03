@@ -20,7 +20,6 @@ namespace Log
     bool printf_va(int value, const char *fmt, va_list args);
     [[noreturn]] void panic(const char *fmt, ...);
 
-    constexpr int Trace     = 10;
     constexpr int Debug     = 20;
     constexpr int Info      = 30;
     constexpr int Warning   = 40;
